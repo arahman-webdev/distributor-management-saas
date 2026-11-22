@@ -11,10 +11,27 @@ generator client {
 // ENUMS
 // -------------------------------------------------------------
 
-enum Role {
+enum PlatformRole {
+  SUPER_ADMIN
+}
+
+enum DistributorRole {
   OWNER
   MANAGER
   SR
+}
+
+enum DistributorStatus {
+  ACTIVE
+  SUSPENDED
+  DEACTIVATED
+}
+
+enum SubscriptionPlan {
+  TRIAL
+  STARTER
+  GROWTH
+  ENTERPRISE
 }
 
 enum StockTransactionType {
@@ -55,31 +72,37 @@ enum DailyClosingStatus {
 // -------------------------------------------------------------
 
 model User {
-  id            String    @id @default(uuid())
-  name          String
-  email         String    @unique
-  emailVerified Boolean   @default(false)
-  image         String?
-  role          Role      @default(MANAGER)
-  phone         String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id              String           @id @default(uuid())
+  name            String
+  email           String           @unique
+  emailVerified   Boolean          @default(false)
+  image           String?
+  phone           String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
 
-  // Multi-Tenancy Link
-  distributorId String?
-  distributor   Distributor? @relation(fields: [distributorId], references: [id], onDelete: Cascade)
+  // Two-Tier Authorization Architecture
+  platformRole    PlatformRole?    // Platform-level access (SUPER_ADMIN). Null for regular distributor staff.
+  distributorRole DistributorRole? @default(MANAGER) // Tenant-level access (OWNER, MANAGER, SR). Null for pure super admins.
+
+  // Multi-Tenancy Link (Null for pure super admins)
+  distributorId   String?
+  distributor     Distributor?     @relation(fields: [distributorId], references: [id], onDelete: Cascade)
 
   // Better Auth Relations
-  sessions      Session[]
-  accounts      Account[]
+  sessions        Session[]
+  accounts        Account[]
 
   // Auditing Relations
+  auditLogs           PlatformAuditLog[]   @relation("AdminAuditor")
   invoicesCreated     Invoice[]            @relation("InvoiceCreator")
   paymentsCollected   PaymentTransaction[] @relation("PaymentCollector")
   expensesLogged      Expense[]            @relation("ExpenseLogger")
   closingsCompleted   DailyClosing[]       @relation("ClosingSigner")
 
   @@index([distributorId])
+  @@index([platformRole])
+  @@index([distributorRole])
 }
 
 model Session {
@@ -127,18 +150,26 @@ model Verification {
 }
 
 // -------------------------------------------------------------
-// MULTI-TENANT DISTRIBUTOR MODELS
+// MULTI-TENANT DISTRIBUTOR & PLATFORM MODELS
 // -------------------------------------------------------------
 
 model Distributor {
-  id            String   @id @default(uuid())
-  name          String   // e.g., "M/S Bismillah Enterprise"
-  phone         String   // Business primary phone
-  address       String   // Depot / Godown address
-  receiptHeader String?  // Header printed on cash memos
-  currency      String   @default("BDT")
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id                    String            @id @default(uuid())
+  name                  String            // e.g., "M/S Bismillah Enterprise"
+  phone                 String            // Business primary phone
+  address               String            // Depot / Godown address
+  receiptHeader         String?           // Header printed on cash memos
+  currency              String            @default("BDT")
+  
+  // Platform Lifecycle & Subscription Management
+  status                DistributorStatus @default(ACTIVE)
+  subscriptionPlan      SubscriptionPlan  @default(STARTER)
+  subscriptionExpiresAt DateTime?
+  maxUsers              Int               @default(5)
+  maxProducts           Int               @default(500)
+
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
 
   // Tenant-scoped children
   users         User[]
@@ -150,6 +181,30 @@ model Distributor {
   expenses      Expense[]
   closings      DailyClosing[]
   stockHistory  StockTransaction[]
+  auditLogs     PlatformAuditLog[]
+
+  @@index([status])
+}
+
+model PlatformAuditLog {
+  id            String       @id @default(uuid())
+  userId        String       // Super Admin user who triggered the action
+  user          User         @relation("AdminAuditor", fields: [userId], references: [id], onDelete: Restrict)
+  distributorId String?      // Target distributor (if action relates to a specific tenant)
+  distributor   Distributor? @relation(fields: [distributorId], references: [id], onDelete: SetNull)
+
+  action        String       // e.g. "DISTRIBUTOR_SUSPENDED", "PLAN_CHANGED", "USER_IMPERSONATION"
+  targetType    String       // "DISTRIBUTOR", "USER", "SUBSCRIPTION", "SYSTEM"
+  targetId      String?      // ID of target entity
+  details       Json?        // Structured before/after diff or metadata
+  ipAddress     String?
+  userAgent     String?
+  createdAt     DateTime     @default(now())
+
+  @@index([userId])
+  @@index([distributorId])
+  @@index([action])
+  @@index([createdAt])
 }
 
 model Beat {

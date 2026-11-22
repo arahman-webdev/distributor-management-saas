@@ -10,7 +10,8 @@
     "test": "pnpm --filter @distribo/web test:run",
     "typecheck": "pnpm -r exec tsc --noEmit",
     "db:generate": "pnpm --filter @distribo/db generate",
-    "db:push": "pnpm --filter @distribo/db push"
+    "db:push": "pnpm --filter @distribo/db push",
+    "bootstrap:admin": "node --experimental-strip-types packages/auth/src/bootstrap.ts"
   },
   "devDependencies": {
     "@types/node": "^22.13.4",

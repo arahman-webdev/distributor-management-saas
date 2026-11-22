@@ -3,7 +3,10 @@
   "compilerOptions": {
     "plugins": [{ "name": "next" }],
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@distribo/auth/client": ["../../packages/auth/src/client.ts"],
+      "@distribo/auth": ["../../packages/auth/src/index.ts"],
+      "@distribo/db": ["../../packages/db/src/index.ts"]
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
