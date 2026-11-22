@@ -43,4 +43,4 @@ export const auth = betterAuth({
 export const authHandler = toNextJsHandler(auth);
 export type Session = typeof auth.$Infer.Session.session;
 export type User = typeof auth.$Infer.Session.user;
-export * from "./guards";
+export * from "./guards.ts";

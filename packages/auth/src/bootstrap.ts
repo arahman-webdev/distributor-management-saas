@@ -1,5 +1,5 @@
 import { prisma } from "@distribo/db";
-import { auth } from "./index";
+import { auth } from "./index.ts";
 
 async function bootstrapSuperAdmin() {
   const secret = process.env.SUPER_ADMIN_BOOTSTRAP_SECRET;
