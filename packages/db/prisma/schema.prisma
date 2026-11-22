@@ -1,0 +1,373 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// -------------------------------------------------------------
+// ENUMS
+// -------------------------------------------------------------
+
+enum Role {
+  OWNER
+  MANAGER
+  SR
+}
+
+enum StockTransactionType {
+  PURCHASE_IN
+  SALE_OUT
+  RETURN_RESTOCK
+  DAMAGE_OUT
+  ADJUSTMENT
+}
+
+enum InvoiceStatus {
+  COMPLETED
+  CANCELLED
+}
+
+enum PaymentMethod {
+  CASH
+  BKASH
+  NAGAD
+  BANK
+}
+
+enum ExpenseCategory {
+  LABOR
+  TEA_SNACKS
+  TRANSPORT
+  RENT
+  OTHER
+}
+
+enum DailyClosingStatus {
+  OPEN
+  LOCKED
+}
+
+// -------------------------------------------------------------
+// BETTER AUTH CORE MODELS
+// -------------------------------------------------------------
+
+model User {
+  id            String    @id @default(uuid())
+  name          String
+  email         String    @unique
+  emailVerified Boolean   @default(false)
+  image         String?
+  role          Role      @default(MANAGER)
+  phone         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Multi-Tenancy Link
+  distributorId String?
+  distributor   Distributor? @relation(fields: [distributorId], references: [id], onDelete: Cascade)
+
+  // Better Auth Relations
+  sessions      Session[]
+  accounts      Account[]
+
+  // Auditing Relations
+  invoicesCreated     Invoice[]            @relation("InvoiceCreator")
+  paymentsCollected   PaymentTransaction[] @relation("PaymentCollector")
+  expensesLogged      Expense[]            @relation("ExpenseLogger")
+  closingsCompleted   DailyClosing[]       @relation("ClosingSigner")
+
+  @@index([distributorId])
+}
+
+model Session {
+  id        String   @id @default(uuid())
+  expiresAt DateTime
+  token     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Account {
+  id                    String    @id @default(uuid())
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([userId])
+}
+
+model Verification {
+  id         String    @id @default(uuid())
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  @@index([identifier])
+}
+
+// -------------------------------------------------------------
+// MULTI-TENANT DISTRIBUTOR MODELS
+// -------------------------------------------------------------
+
+model Distributor {
+  id            String   @id @default(uuid())
+  name          String   // e.g., "M/S Bismillah Enterprise"
+  phone         String   // Business primary phone
+  address       String   // Depot / Godown address
+  receiptHeader String?  // Header printed on cash memos
+  currency      String   @default("BDT")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Tenant-scoped children
+  users         User[]
+  beats         Beat[]
+  products      Product[]
+  retailers     Retailer[]
+  invoices      Invoice[]
+  payments      PaymentTransaction[]
+  expenses      Expense[]
+  closings      DailyClosing[]
+  stockHistory  StockTransaction[]
+}
+
+model Beat {
+  id            String      @id @default(uuid())
+  distributorId String
+  distributor   Distributor @relation(fields: [distributorId], references: [id], onDelete: Cascade)
+  name          String      // e.g., "Rampura Main Road", "Khilgaon Beat"
+  dayOfWeek     String?     // e.g., "Sunday", "Tuesday"
+  description   String?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  retailers     Retailer[]
+
+  @@index([distributorId])
+}
+
+model Retailer {
+  id             String      @id @default(uuid())
+  distributorId  String
+  distributor    Distributor @relation(fields: [distributorId], references: [id], onDelete: Cascade)
+  beatId         String?
+  beat           Beat?       @relation(fields: [beatId], references: [id], onDelete: SetNull)
+
+  shopName       String      // দোকানের নাম
+  ownerName      String?     // মালিকের নাম
+  phone          String      // মোবাইল নম্বর (Used for SMS/WhatsApp memos)
+  address        String?
+  creditLimit    Decimal     @default(0.00) @db.Decimal(12, 2)
+  openingBalance Decimal     @default(0.00) @db.Decimal(12, 2)
+  currentDue     Decimal     @default(0.00) @db.Decimal(12, 2)
+  isActive       Boolean     @default(true)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  invoices       Invoice[]
+  payments       PaymentTransaction[]
+
+  @@index([distributorId])
+  @@index([beatId])
+  @@index([phone])
+}
+
+model Product {
+  id                 String      @id @default(uuid())
+  distributorId      String
+  distributor        Distributor @relation(fields: [distributorId], references: [id], onDelete: Cascade)
+
+  name               String      // Product Name in English
+  banglaName         String?     // Optional Bengali Name
+  brand              String      // e.g., "Unilever", "Square", "PRAN"
+  category           String      // e.g., "Soap", "Biscuits", "Beverage"
+
+  // Dual-UOM Configuration
+  uomPrimary         String      @default("Carton") // কেস / কার্টন
+  uomSub             String      @default("Pcs")    // পিস / প্যাকেট
+  conversionFactor   Int         // e.g., 24 pieces per carton
+
+  // Pricing (Tracked per carton and per piece)
+  purchaseCost       Decimal     @db.Decimal(12, 2) // Cost per carton
+  wholesalePrice     Decimal     @db.Decimal(12, 2) // Selling price per carton
+  wholesalePiecePrice Decimal?   @db.Decimal(12, 2) // Optional piece selling rate
+  mrp                Decimal?    @db.Decimal(12, 2) // Maximum retail price per piece
+
+  minStockAlert      Int         @default(120)      // In base pieces
+  currentStockPieces Int         @default(0)        // Tracked in base pieces
+
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
+
+  invoiceItems       InvoiceItem[]
+  stockTransactions  StockTransaction[]
+
+  @@index([distributorId])
+  @@index([brand])
+  @@index([category])
+}
+
+model StockTransaction {
+  id             String               @id @default(uuid())
+  distributorId  String
+  distributor    Distributor          @relation(fields: [distributorId], references: [id], onDelete: Cascade)
+  productId      String
+  product        Product              @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  type           StockTransactionType
+  quantityPieces Int                  // Positive for in, Negative for out
+  referenceId    String?              // Invoice #, Challan #, or manual ref
+  notes          String?
+  createdAt      DateTime             @default(now())
+
+  @@index([distributorId])
+  @@index([productId])
+  @@index([type])
+}
+
+model Invoice {
+  id                 String        @id @default(uuid())
+  distributorId      String
+  distributor        Distributor   @relation(fields: [distributorId], references: [id], onDelete: Cascade)
+  retailerId         String
+  retailer           Retailer      @relation(fields: [retailerId], references: [id], onDelete: Cascade)
+
+  invoiceNumber      String        // e.g., "INV-2026-0001"
+  subtotal           Decimal       @db.Decimal(12, 2)
+  discount           Decimal       @default(0.00) @db.Decimal(12, 2)
+  totalAmount        Decimal       @db.Decimal(12, 2) // Subtotal - Discount
+  previousDue        Decimal       @db.Decimal(12, 2) // Customer due snapshot at billing
+  grandTotal         Decimal       @db.Decimal(12, 2) // TotalAmount + PreviousDue
+
+  // Payment Breakdown
+  paidAmount         Decimal       @db.Decimal(12, 2) // Total amount paid now
+  cashAmount         Decimal       @default(0.00) @db.Decimal(12, 2)
+  mfsAmount          Decimal       @default(0.00) @db.Decimal(12, 2)
+  mfsProvider        String?       // "bKash", "Nagad", "Rocket"
+  dueAmount          Decimal       @db.Decimal(12, 2) // GrandTotal - PaidAmount
+
+  status             InvoiceStatus @default(COMPLETED)
+  cancellationReason String?
+
+  createdById        String?
+  createdBy          User?         @relation("InvoiceCreator", fields: [createdById], references: [id], onDelete: SetNull)
+
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+
+  items              InvoiceItem[]
+  payments           PaymentTransaction[]
+
+  @@unique([distributorId, invoiceNumber])
+  @@index([distributorId])
+  @@index([retailerId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model InvoiceItem {
+  id                String   @id @default(uuid())
+  invoiceId         String
+  invoice           Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  productId         String
+  product           Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  cartonQty         Int      @default(0)
+  pieceQty          Int      @default(0)
+  totalPieces       Int      // (cartonQty * conversionFactor) + pieceQty
+  unitPricePerPiece Decimal  @db.Decimal(12, 2)
+  totalPrice        Decimal  @db.Decimal(12, 2)
+
+  @@index([invoiceId])
+  @@index([productId])
+}
+
+model PaymentTransaction {
+  id            String        @id @default(uuid())
+  distributorId String
+  distributor   Distributor   @relation(fields: [distributorId], references: [id], onDelete: Cascade)
+  retailerId    String
+  retailer      Retailer      @relation(fields: [retailerId], references: [id], onDelete: Cascade)
+  invoiceId     String?
+  invoice       Invoice?      @relation(fields: [invoiceId], references: [id], onDelete: SetNull)
+
+  mrNumber      String        // Money Receipt # (e.g., "MR-2026-0001")
+  amount        Decimal       @db.Decimal(12, 2)
+  paymentMethod PaymentMethod @default(CASH)
+  notes         String?
+
+  createdById   String?
+  createdBy     User?         @relation("PaymentCollector", fields: [createdById], references: [id], onDelete: SetNull)
+
+  createdAt     DateTime      @default(now())
+
+  @@index([distributorId])
+  @@index([retailerId])
+  @@index([createdAt])
+}
+
+model Expense {
+  id            String          @id @default(uuid())
+  distributorId String
+  distributor   Distributor     @relation(fields: [distributorId], references: [id], onDelete: Cascade)
+
+  category      ExpenseCategory @default(TEA_SNACKS)
+  amount        Decimal         @db.Decimal(12, 2)
+  notes         String
+  date          DateTime        @default(now())
+
+  createdById   String?
+  createdBy     User?           @relation("ExpenseLogger", fields: [createdById], references: [id], onDelete: SetNull)
+
+  createdAt     DateTime        @default(now())
+
+  @@index([distributorId])
+  @@index([date])
+}
+
+model DailyClosing {
+  id            String             @id @default(uuid())
+  distributorId String
+  distributor   Distributor        @relation(fields: [distributorId], references: [id], onDelete: Cascade)
+
+  closingDate   DateTime           // Calendar date of the closing
+  grossSales    Decimal            @db.Decimal(12, 2)
+  cashCollected Decimal            @db.Decimal(12, 2) // Cash from today's invoices
+  dueCollected  Decimal            @db.Decimal(12, 2) // Cash collected from past dues
+  mfsCollected  Decimal            @db.Decimal(12, 2) // bKash/Nagad collected today
+  expensesTotal Decimal            @db.Decimal(12, 2) // Petty expenses incurred today
+  netCashInHand Decimal            @db.Decimal(12, 2) // (CashCollected + DueCollected - ExpensesTotal)
+
+  status        DailyClosingStatus @default(OPEN)
+
+  closedById    String?
+  closedBy      User?              @relation("ClosingSigner", fields: [closedById], references: [id], onDelete: SetNull)
+  closedAt      DateTime?
+
+  createdAt     DateTime           @default(now())
+
+  @@unique([distributorId, closingDate])
+  @@index([distributorId])
+  @@index([status])
+}

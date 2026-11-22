@@ -1,0 +1,20 @@
+{
+  "name": "distribo-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Distribo - FMCG & Grocery Distributor Management SaaS in Bangladesh",
+  "scripts": {
+    "build": "pnpm --filter @distribo/db build && pnpm --filter @distribo/web build",
+    "dev": "pnpm --filter @distribo/web dev",
+    "lint": "pnpm --filter @distribo/web lint",
+    "test": "pnpm --filter @distribo/web test:run",
+    "typecheck": "pnpm -r exec tsc --noEmit",
+    "db:generate": "pnpm --filter @distribo/db generate",
+    "db:push": "pnpm --filter @distribo/db push"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.4",
+    "typescript": "^5.7.3"
+  },
+  "packageManager": "pnpm@12.11.2"
+}
