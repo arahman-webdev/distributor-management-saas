@@ -139,3 +139,32 @@ export function calculateEveningCash(
   const totalCashIn = roundCurrency(cashFromInvoices) + roundCurrency(cashFromDueRecovery);
   return roundCurrency(totalCashIn - roundCurrency(godownPettyExpenses));
 }
+
+/**
+ * Validates Bangladeshi mobile phone numbers (11 digits: 013-019XXXXXXXX).
+ */
+export function isValidBdPhone(phone: string): boolean {
+  if (!phone) return false;
+  const cleaned = phone.replace(/[\s\-\+]/g, "").replace(/^88/, "");
+  return /^01[3-9]\d{8}$/.test(cleaned);
+}
+
+/**
+ * Normalizes a Bangladeshi mobile number to standard 11 digits format.
+ */
+export function formatBdPhone(phone: string): string {
+  if (!phone) return "";
+  return phone.replace(/[\s\-\+]/g, "").replace(/^88/, "");
+}
+
+/**
+ * Calculates credit limit utilization percentage safely.
+ */
+export function calculateCreditUtilization(
+  currentDue: number,
+  creditLimit: number
+): number {
+  if (creditLimit <= 0) return 0;
+  const percent = (roundCurrency(currentDue) / roundCurrency(creditLimit)) * 100;
+  return Math.max(0, Math.round(percent * 10) / 10);
+}

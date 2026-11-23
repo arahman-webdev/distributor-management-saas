@@ -78,6 +78,7 @@ model User {
   emailVerified   Boolean          @default(false)
   image           String?
   phone           String?
+  isActive        Boolean          @default(true)
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
 
@@ -88,6 +89,15 @@ model User {
   // Multi-Tenancy Link (Null for pure super admins)
   distributorId   String?
   distributor     Distributor?     @relation(fields: [distributorId], references: [id], onDelete: Cascade)
+
+  // Manager-SR Organization Hierarchy
+  managerId       String?
+  manager         User?            @relation("ManagerSRs", fields: [managerId], references: [id], onDelete: SetNull)
+  subordinates    User[]           @relation("ManagerSRs")
+
+  // Field Route & Retailer Assignments
+  assignedBeats     Beat[]         @relation("BeatSR")
+  assignedRetailers Retailer[]     @relation("RetailerSR")
 
   // Better Auth Relations
   sessions        Session[]
@@ -214,12 +224,15 @@ model Beat {
   name          String      // e.g., "Rampura Main Road", "Khilgaon Beat"
   dayOfWeek     String?     // e.g., "Sunday", "Tuesday"
   description   String?
+  assignedSrId  String?
+  assignedSr    User?       @relation("BeatSR", fields: [assignedSrId], references: [id], onDelete: SetNull)
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
 
   retailers     Retailer[]
 
   @@index([distributorId])
+  @@index([assignedSrId])
 }
 
 model Retailer {
@@ -228,6 +241,8 @@ model Retailer {
   distributor    Distributor @relation(fields: [distributorId], references: [id], onDelete: Cascade)
   beatId         String?
   beat           Beat?       @relation(fields: [beatId], references: [id], onDelete: SetNull)
+  assignedSrId   String?
+  assignedSr     User?       @relation("RetailerSR", fields: [assignedSrId], references: [id], onDelete: SetNull)
 
   shopName       String      // দোকানের নাম
   ownerName      String?     // মালিকের নাম
@@ -245,6 +260,7 @@ model Retailer {
 
   @@index([distributorId])
   @@index([beatId])
+  @@index([assignedSrId])
   @@index([phone])
 }
 
