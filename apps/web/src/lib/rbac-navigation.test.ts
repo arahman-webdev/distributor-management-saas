@@ -27,10 +27,10 @@ describe("RBAC Navigation & Action Filtering", () => {
 
   it("strictly limits SR to field-relevant routes", () => {
     const srNav = getFilteredNavItems("SR");
-    expect(srNav.length).toBe(4);
+    expect(srNav.length).toBe(5);
     const ids = srNav.map((i) => i.id);
-    expect(ids).toEqual(["dashboard", "pos", "retailers", "khata"]);
-    expect(ids).not.toContain("products");
+    expect(ids).toEqual(["dashboard", "pos", "products", "retailers", "khata"]);
+    expect(ids).toContain("products");
     expect(ids).not.toContain("inventory");
     expect(ids).not.toContain("closing");
     expect(ids).not.toContain("settings");

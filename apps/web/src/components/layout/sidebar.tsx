@@ -62,7 +62,7 @@ export default function Sidebar({
       {/* Brand Header */}
       <div className="p-6 border-b border-slate-100 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-500 flex items-center justify-center text-white font-extrabold shadow-md shadow-emerald-500/20">
+          <div className="w-10 h-10 rounded-2xl bg-[#1C398E] flex items-center justify-center text-white font-extrabold shadow-md shadow-[#1C398E]/20">
             <Store className="w-5 h-5" />
           </div>
           <div>
@@ -70,7 +70,7 @@ export default function Sidebar({
               <span className="font-black text-lg tracking-tight text-slate-900 leading-tight">
                 Distribo
               </span>
-              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
+              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-[#1C398E]/10 text-[#1C398E] border border-[#1C398E]/20">
                 FMCG
               </span>
             </div>
@@ -108,15 +108,15 @@ export default function Sidebar({
               onClick={onCloseMobile}
               className={`flex items-center gap-3.5 px-3.5 py-3 rounded-2xl text-xs font-bold transition-all group ${
                 isActive
-                  ? "bg-emerald-50 text-emerald-700 shadow-xs border border-emerald-100/80"
+                  ? "bg-[#1C398E]/10 text-[#1C398E] shadow-xs border border-[#1C398E]/20"
                   : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
               }`}
             >
               <div
                 className={`p-1.5 rounded-xl transition-colors ${
                   isActive
-                    ? "bg-emerald-600 text-white shadow-xs shadow-emerald-600/30"
-                    : "text-slate-400 group-hover:text-emerald-600 group-hover:bg-emerald-50"
+                    ? "bg-[#1C398E] text-white shadow-xs shadow-[#1C398E]/30"
+                    : "text-slate-400 group-hover:text-[#1C398E] group-hover:bg-[#1C398E]/10"
                 }`}
               >
                 <Icon className="w-4 h-4" />

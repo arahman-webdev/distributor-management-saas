@@ -43,7 +43,7 @@ export const ALL_NAV_ITEMS: NavItem[] = [
     iconName: "Package",
     labelKey: "navProducts",
     subtitleKey: "subProducts",
-    allowedRoles: ["OWNER", "MANAGER"],
+    allowedRoles: ["OWNER", "MANAGER", "SR"],
   },
   {
     id: "inventory",

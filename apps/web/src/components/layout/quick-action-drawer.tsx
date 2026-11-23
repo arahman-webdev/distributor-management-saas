@@ -60,19 +60,19 @@ export default function QuickActionDrawer({
       <div className="fixed inset-y-0 right-0 max-w-full flex pl-10">
         <div className="w-screen max-w-md bg-white shadow-2xl flex flex-col z-50 animate-in slide-in-from-right duration-200">
           {/* Header */}
-          <div className="p-6 bg-slate-900 text-white flex items-center justify-between border-b border-slate-800">
+          <div className="p-6 bg-[#1C398E] text-white flex items-center justify-between border-b border-[#162C70]">
             <div className="flex items-center gap-2.5">
-              <div className="p-2 rounded-xl bg-emerald-500/20 text-emerald-400">
-                <Zap className="w-5 h-5" />
+              <div className="p-2 rounded-xl bg-white/20 text-white">
+                <Zap className="w-5 h-5 fill-current" />
               </div>
               <div>
                 <h2 className="text-base font-bold">{t("quickActionTitle")}</h2>
-                <p className="text-xs text-slate-400">{t("quickActionDesc")}</p>
+                <p className="text-xs text-blue-100">{t("quickActionDesc")}</p>
               </div>
             </div>
             <button
               onClick={onClose}
-              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+              className="p-1.5 rounded-lg text-blue-200 hover:text-white hover:bg-white/10 transition-colors"
             >
               <X className="w-5 h-5" />
             </button>
@@ -88,7 +88,7 @@ export default function QuickActionDrawer({
                   key={item.id}
                   href={item.href}
                   onClick={onClose}
-                  className="flex items-start gap-4 p-4 rounded-xl border border-slate-200 bg-white hover:border-emerald-500 hover:shadow-md transition-all group"
+                  className="flex items-start gap-4 p-4 rounded-xl border border-slate-200 bg-white hover:border-[#1C398E] hover:shadow-md transition-all group"
                 >
                   <div
                     className={`p-3 rounded-xl border flex-shrink-0 transition-transform group-hover:scale-105 ${item.colorClass}`}
@@ -96,7 +96,7 @@ export default function QuickActionDrawer({
                     <Icon className="w-5 h-5" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-sm font-bold text-slate-900 group-hover:text-emerald-600 transition-colors">
+                    <h3 className="text-sm font-bold text-slate-900 group-hover:text-[#1C398E] transition-colors">
                       {t(item.titleKey)}
                     </h3>
                     <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">

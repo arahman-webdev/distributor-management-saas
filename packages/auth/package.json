@@ -12,6 +12,10 @@
     "./client": {
       "types": "./src/client.ts",
       "default": "./src/client.ts"
+    },
+    "./guards": {
+      "types": "./src/guards.ts",
+      "default": "./src/guards.ts"
     }
   },
   "dependencies": {
