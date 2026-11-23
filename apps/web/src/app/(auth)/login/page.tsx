@@ -48,14 +48,14 @@ export default function LoginPage() {
       <div className="max-w-md w-full bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-emerald-100 text-emerald-700 mb-3">
+          <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-[#1C398E]/10 text-[#1C398E] mb-3 shadow-xs">
             <Store className="w-6 h-6" />
           </div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+          <h1 className="text-2xl font-black tracking-tight text-slate-900">
             Distribo (ডিস্ট্রিবিউটো)
           </h1>
-          <p className="text-sm text-slate-500 mt-1">
-            আপনার অ্যাকাউন্টে লগইন করুন (Sign in to your account)
+          <p className="text-xs text-slate-500 mt-1">
+            মালিক, ম্যানেজার বা এসআর অ্যাকাউন্টে লগইন করুন
           </p>
         </div>
 
@@ -79,7 +79,7 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="example@distribo.app"
-                className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+                className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#1C398E] focus:border-transparent transition-all"
               />
             </div>
           </div>
@@ -96,7 +96,7 @@ export default function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+                className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#1C398E] focus:border-transparent transition-all"
               />
             </div>
           </div>
@@ -104,7 +104,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 px-4 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-medium text-sm transition-colors flex items-center justify-center gap-2 disabled:opacity-50 mt-2 shadow-sm"
+            className="w-full py-3 px-4 rounded-xl bg-[#1C398E] hover:bg-[#162C70] text-white font-bold text-sm transition-all flex items-center justify-center gap-2 disabled:opacity-50 mt-2 shadow-md shadow-[#1C398E]/25 hover:scale-101"
           >
             {loading ? "যাচাই করা হচ্ছে..." : "লগইন করুন (Sign In)"}
             <ArrowRight className="w-4 h-4" />
@@ -116,7 +116,7 @@ export default function LoginPage() {
             নতুন ডিস্ট্রিবিউটর? (New distributor?){" "}
             <Link
               href="/register"
-              className="text-emerald-600 font-semibold hover:underline"
+              className="text-[#1C398E] font-bold hover:underline"
             >
               এজেন্সি রেজিস্টার করুন (Register business)
             </Link>
