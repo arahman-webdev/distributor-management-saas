@@ -1,9 +1,9 @@
 import { redirect } from "next/navigation";
 import { getCurrentSession } from "@/lib/actions/auth-actions";
 import { prisma } from "@distribo/db";
-import Link from "next/link";
-import { Store, ShoppingCart, Package, Users, BookOpen, Clock, AlertTriangle, ShieldAlert } from "lucide-react";
+import { ShieldAlert } from "lucide-react";
 import LogoutButton from "./logout-button";
+import DashboardShell from "@/components/layout/dashboard-shell";
 
 export default async function DashboardLayout({
   children,
@@ -62,73 +62,13 @@ export default async function DashboardLayout({
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
-      {/* Top Header */}
-      <header className="bg-white border-b border-slate-200 sticky top-0 z-30">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between h-16">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold">
-              <Store className="w-5 h-5" />
-            </div>
-            <div>
-              <span className="font-bold text-slate-900 text-base leading-tight block">
-                {distributor.name}
-              </span>
-              <span className="text-xs text-slate-500">
-                FMCG Distribution Depot
-              </span>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-4">
-            <div className="hidden sm:flex flex-col text-right">
-              <span className="text-sm font-semibold text-slate-800">
-                {user.name}
-              </span>
-              <span className="text-xs text-slate-500 flex items-center justify-end gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                {user.distributorRole}
-              </span>
-            </div>
-            <LogoutButton />
-          </div>
-        </div>
-
-        {/* Navigation Tabs */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center gap-1 overflow-x-auto text-xs font-semibold">
-          <Link
-            href="/dashboard"
-            className="py-3 px-3.5 border-b-2 border-emerald-600 text-emerald-700 flex items-center gap-1.5 whitespace-nowrap"
-          >
-            ড্যাশবোর্ড (Dashboard)
-          </Link>
-          <span className="py-3 px-3.5 text-slate-400 flex items-center gap-1.5 cursor-not-allowed whitespace-nowrap">
-            <ShoppingCart className="w-3.5 h-3.5" />
-            বিক্রি / POS (Day 7)
-          </span>
-          <span className="py-3 px-3.5 text-slate-400 flex items-center gap-1.5 cursor-not-allowed whitespace-nowrap">
-            <Package className="w-3.5 h-3.5" />
-            পণ্য তালিকা (Day 4)
-          </span>
-          <span className="py-3 px-3.5 text-slate-400 flex items-center gap-1.5 cursor-not-allowed whitespace-nowrap">
-            <Users className="w-3.5 h-3.5" />
-            দোকানদার / রুট (Day 6)
-          </span>
-          <span className="py-3 px-3.5 text-slate-400 flex items-center gap-1.5 cursor-not-allowed whitespace-nowrap">
-            <BookOpen className="w-3.5 h-3.5" />
-            বাকি খাতা (Day 10)
-          </span>
-          <span className="py-3 px-3.5 text-slate-400 flex items-center gap-1.5 cursor-not-allowed whitespace-nowrap">
-            <Clock className="w-3.5 h-3.5" />
-            দৈনিক ক্লোজিং (Day 13)
-          </span>
-        </div>
-      </header>
-
-      {/* Main Content Area */}
-      <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6">
-        {children}
-      </main>
-    </div>
+    <DashboardShell
+      distributorName={distributor.name}
+      subscriptionPlan={distributor.subscriptionPlan}
+      userName={user.name}
+      role={user.distributorRole || "MANAGER"}
+    >
+      {children}
+    </DashboardShell>
   );
 }
